@@ -2,7 +2,8 @@
  * Processing BEM.JSON.decl asynchronously
  *
  * @name BEM.JSON
-*/
+ */
+var count = 0;
 (function (BEM) {
 
     /**
@@ -56,17 +57,57 @@
         }
     };
 
-    BEM.JSON._ctx.prototype._buildWithNewCtx = function (params, pos, siblingsCount, currBlock, tParams) {
-        var ctx = new BEM.JSON._ctx(
-            params,
-            pos,
-            siblingsCount,
-            currBlock,
-            tParams
-        );
-        ctx._globalThread = this._globalThread;
-        ctx._threads = 0;
-        return ctx.build();
+    BEM.JSON._ctx.prototype._findDecls = function (params, currBlock) {
+        var block = params.block || (currBlock && currBlock.block),
+            elem = params.elem,
+            decl = block && BEM.JSON._decls[block];
+        if (decl) {
+            if (elem) {
+                return Boolean(decl._elem || decl['_elem__' + elem]);
+            } else {
+                return Boolean(decl._block);
+            }
+        } else {
+            return false;
+        }
+    };
+
+    BEM.JSON._ctx.prototype._buildSkippedContent = function (params, pos, siblingsCount, currBlock, tParams) {
+        var newCurrBlock, contentType;
+        if (params.content) {
+            contentType = BEM.JSON._type(params.content);
+            if (
+                (!params.block) || //not block (elem or array)
+                (currBlock && (params.block === currBlock.block) && params.elem) //elem with defined block param
+            ) {
+                newCurrBlock = currBlock;
+            } else {
+                newCurrBlock = params;
+            }
+            if (contentType === 'object') {
+                params.content._parent = params;
+            }
+            params.content = this._buildWithNewCtx(params.content, 1, 1, newCurrBlock, params, contentType);
+        }
+    };
+
+
+    BEM.JSON._ctx.prototype._buildWithNewCtx = function (params, pos, siblingsCount, currBlock, tParams, paramsType) {
+        if (paramsType === 'object' && !this._findDecls(params, currBlock)) {
+            this._buildSkippedContent(params, pos, siblingsCount, currBlock, tParams);
+            return params;
+        } else {
+            var ctx = new BEM.JSON._ctx(
+                params,
+                pos,
+                siblingsCount,
+                currBlock,
+                tParams
+            );
+            ctx._globalThread = this._globalThread;
+            ctx._threads = 0;
+            return ctx.build();
+        }
     };
 
 
@@ -79,13 +120,13 @@
      */
     BEM.JSON.buildAsync = function (params, callback) {
         var resultParams,
-        thread = {
-            count: 0,
-            callback: function () {
-                callback(resultParams);
-            }
-        },
-        ctx = new BEM.JSON._ctx(params);
+            thread = {
+                count: 0,
+                callback: function () {
+                    callback(resultParams);
+                }
+            },
+            ctx = new BEM.JSON._ctx(params);
         ctx._globalThread = thread;
         ctx._threads = 0;
         resultParams = ctx.build();

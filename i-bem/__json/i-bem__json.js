@@ -2,7 +2,7 @@
  * Processing bemjson using same declarations and api as BEM.HTML
  *
  * @name BEM.JSON
-*/
+ */
 if (typeof BEM === 'undefined') {
     BEM = {};
 }
@@ -98,16 +98,16 @@ if (typeof BEM === 'undefined') {
     });
 
     /**
-    * Context
-    *
-    * @constructor
-    * @param {*} params bemjson object
-    * @param {Number} [pos] pos position of bem element in parent content (start from 1)
-    * @param {Number} [params] siblingsCount amount of elents in parent content
-    * @param {Object} [currBlock] parent block of element
-    * @param {Object} [tParams] tunneled params
-    * @return {*} bemjson
-    */
+     * Context
+     *
+     * @constructor
+     * @param {*} params bemjson object
+     * @param {Number} [pos] pos position of bem element in parent content (start from 1)
+     * @param {Number} [params] siblingsCount amount of elents in parent content
+     * @param {Object} [currBlock] parent block of element
+     * @param {Object} [tParams] tunneled params
+     * @return {*} bemjson
+     */
     Ctx = function (params, pos, siblingsCount, currBlock, tParams) {
         this._params = params;
         this._currBlock = currBlock;
@@ -162,7 +162,8 @@ if (typeof BEM === 'undefined') {
                     pos,
                     siblingsCount,
                     currBlock,
-                    this._tParams && extend({}, this._tParams)
+                    this._tParams && extend({}, this._tParams),
+                    paramsType
                 );
             }
             return params;
@@ -212,8 +213,8 @@ if (typeof BEM === 'undefined') {
         /**
          * Return or set one context param
          *
-         * @param {String} param name
-         * @param {String} [val] param value
+         * @param {String} name
+         * @param {*} [val] param value
          * @param {Boolean} [force=false] set param, even if it exists
          * @param {Boolean} [needExtend=false] extend param
          */
@@ -250,12 +251,22 @@ if (typeof BEM === 'undefined') {
             return this.param('mods', val, force, true);
         },
 
+        /**
+         * Return or set modifiers of element context (shortcut to params('elemMods', val))
+         *
+         * @param {Object} [val] modifiers
+         * @param {Boolean} [force=false] set modifiers, even if it exists
+         */
+        elemMods: function (val, force) {
+            return this.param('elemMods', val, force, true);
+        },
+
         _property: function (propName, args) {
             var properties = this._params[propName] = this._params[propName] || {},
                 name = args[0],
                 val = args[1],
                 force = args[2];
-            if (arguments.length < 2) {
+            if (typeof val === 'undefined') {
                 return properties[name];
             }
             if (force || !(properties.hasOwnProperty(name))) {
@@ -273,6 +284,17 @@ if (typeof BEM === 'undefined') {
          */
         mod: function () {
             return this._property('mods', arguments);
+        },
+
+        /**
+         * Return or set block modifier
+         *
+         * @param {String} name modifier name
+         * @param {String} [val] modifier value
+         * @param {Boolean} [force=false] set modifier, even if it exists
+         */
+        elemMod: function () {
+            return this._property('elemMods', arguments);
         },
 
         /**
@@ -512,9 +534,6 @@ if (typeof BEM === 'undefined') {
                 params.forEach(function (param, pos) {
                     params[pos] = ctx._buildInner(param, pos + 1, params.length, params); //pos start from 1
                 });
-                // params = params.map(function (param, pos) {
-                //     return ctx._buildInner(param, pos + 1, params.length, params); //pos start from 1
-                // });
             } else if (params.content) { //some object with content
                 params.content = this._buildInner(params.content, 1, 1, params);
             }
@@ -545,20 +564,29 @@ if (typeof BEM === 'undefined') {
          * Default handler for errors in decls
          */
         _declErrorHandler: function (err) {
-            console.error(err);
+            if (err && err.message) {
+                try {
+                    console.log(['Error in', this._params.block, this._params.elem].join(' '));
+                } catch (er) {}
+                console.error(err);
+            }
         }
     };
     BEM.JSON = {
 
+        _decls: decls,
+
         _ctx: Ctx,
+
+        _type: type,
 
         /**
          * Set declarations
          *
-         * @param {String|Object} decl block name
-         * @param {String} decl.name name
-         * @param {String} [decl.modName] modifier name
-         * @param {String} [decl.modVal] modifier value
+         * @param {String|Object} desc block name
+         * @param {String} desc.name name
+         * @param {String} [desc.modName] modifier name
+         * @param {String} [desc.modVal] modifier value
          * @param {Object} props declarations
          * @param {Function} props.onBlock block root declaration
          * @param {Function|Object} props.onElem elems declarations
@@ -587,7 +615,7 @@ if (typeof BEM === 'undefined') {
         /**
          * Applies declarations to bemjson
          *
-         * @param {Object} param bemjson object
+         * @param {Object} params bemjson object
          * @return {Object} bemjson object
          */
         build: function (params) {

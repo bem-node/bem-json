@@ -88,21 +88,41 @@ Set block/element content
 
 ### ctx.mods()
 
-Returns block/element mods (modifications) object
+Returns block mods (modifications) object
 
 ### ctx.mods(val, [force=false])
 
-Set block/element modifications, return `ctx`
+Set block modifications, return `ctx`
+
+ * If `force` is `true` it overrides previous value. Otherwise it's not.
+
+### ctx.elemMods()
+
+Returns element mods (modifications) object
+
+### ctx.elemMods(val, [force=false])
+
+Set element modifications, return `ctx`
 
  * If `force` is `true` it overrides previous value. Otherwise it's not.
 
 ### ctx.mod(name)
 
-Return block/element modification value
+Return block modification value
 
 ### ctx.mod(name, [val], [force=false])
 
-Sets block/element modification value, returns `ctx`
+Sets block modification value, returns `ctx`
+
+ * If `force` is `true` it overrides previous value. Otherwise it's not.
+
+### ctx.elemMod(name)
+
+Return element modification value
+
+### ctx.elemMod(name, [val], [force=false])
+
+Sets element modification value, returns `ctx`
 
  * If `force` is `true` it overrides previous value. Otherwise it's not.
 
