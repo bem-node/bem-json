@@ -2,7 +2,7 @@
 
 This is JavaScript template engine for BEM methodology (http://bem.github.com/bem-method/html/all.ru.html) and allows to write templates in the form of declarations on pure js.
 
-###Template
+### Template
 
 ```js
 BEM.JSON.decl('b-block', {
@@ -17,7 +17,7 @@ BEM.JSON.decl('b-block', {
 });
 ```
 
-###Output json
+### Output json
 
 ```js
 console.log(BEM.JSON.build({block: 'b-block'}));
@@ -33,7 +33,7 @@ console.log(BEM.JSON.build({block: 'b-block'}));
 }
 ```
 
-###Output html
+### Output html
 
 ```js
 console.log(BEM.HTML.build({block: 'b-block'}));
